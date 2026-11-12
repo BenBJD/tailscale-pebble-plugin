@@ -1,0 +1,66 @@
+name: Publish to RePebble
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version override (leave blank to read from package.json)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Pebble Tool & SDK
+        run: |
+          uv tool install pebble-tool
+          pebble sdk install latest
+
+      - name: Build Pebble App
+        run: pebble build
+
+      - name: Upload PBW artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pbw
+          path: build/*.pbw
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download PBW
+        uses: actions/download-artifact@v4
+        with:
+          name: pbw
+
+      - name: Publish to RePebble
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [ -z "$VERSION" ]; then
+            VERSION=$(jq -r .version package.json)
+          fi
+          echo "Publishing version: $VERSION"
+
+          TOKEN=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://appstore-api.repebble.com" | jq -r .value)
+
+          curl -sS --fail-with-body -H "Authorization: Bearer $TOKEN" \
+            --form-string version="$VERSION" \
+            -F "pbwFile=@monzo-pebble.pbw" \
+            --form-string isPublished=true \
+            https://appstore-api.repebble.com/api/dashboard/apps/1e78f0b3302c43c6918e2d23/releases
