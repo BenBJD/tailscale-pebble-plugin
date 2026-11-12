@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tailscale Plugin Settings</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --ts-blue: #2358f2;
+      --ts-blue-hover: #1b44c2;
+      --ts-slate: #1e293b;
+      --ts-green: #10b981;
+      --ts-gray: #64748b;
+      --card-bg: rgba(128, 128, 128, 0.08);
+      --card-border: rgba(128, 128, 128, 0.2);
+      --text-muted: rgba(128, 128, 128, 0.9);
+      --input-bg: rgba(128, 128, 128, 0.12);
+    }
+
+    body {
+      font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 24px 20px 48px;
+      color: inherit;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .logo-badge {
+      width: 40px;
+      height: 40px;
+      background: var(--ts-blue);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 22px;
+      box-shadow: 0 2px 8px rgba(35, 88, 242, 0.35);
+    }
+
+    .logo-dots {
+      display: grid;
+      grid-template-columns: repeat(3, 6px);
+      gap: 3px;
+    }
+
+    .logo-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .logo-dot.dim {
+      opacity: 0.35;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 17px;
+      margin: 0 0 12px;
+      font-weight: 600;
+    }
+
+    .instructions {
+      font-size: 14px;
+      line-height: 1.5;
+      opacity: 0.88;
+      margin: 0 0 16px;
+    }
+
+    .instructions ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .instructions li {
+      margin-bottom: 8px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+      opacity: 0.85;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--input-bg);
+      color: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--ts-blue);
+    }
+
+    .toggle-pw-btn {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 13px;
+      color: var(--ts-blue);
+      cursor: pointer;
+      padding: 4px 6px;
+      font-weight: 600;
+    }
+
+    .field-hint {
+      font-size: 12px;
+      opacity: 0.72;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: var(--ts-blue);
+      color: white;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--ts-blue-hover);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn.outline {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: inherit;
+    }
+
+    .btn.outline:hover {
+      background: rgba(128, 128, 128, 0.1);
+    }
+
+    .btn.danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+    }
+
+    .btn.danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--ts-blue);
+      font-size: inherit;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .status-badge.connected {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+
+    .status-badge.disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .grid-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .stat-box {
+      background: rgba(128, 128, 128, 0.08);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ts-blue);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    .device-list {
+      max-height: 220px;
+      overflow-y: auto;
+      margin: 12px 0;
+      padding: 0;
+      list-style: none;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+    }
+
+    .device-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 14px;
+    }
+
+    .device-item:last-child {
+      border-bottom: none;
+    }
+
+    .dev-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dev-name {
+      font-weight: 600;
+    }
+
+    .dev-ip {
+      font-size: 12px;
+      opacity: 0.7;
+      font-family: monospace;
+    }
+
+    .dev-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+    }
+
+    .dev-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dev-dot.online {
+      background: #10b981;
+    }
+
+    .dev-dot.offline {
+      background: #94a3b8;
+    }
+
+    .alert {
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .alert.warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #f59e0b;
+    }
+
+    .alert.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #ef4444;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #status-bar {
+      font-size: 13px;
+      text-align: center;
+      opacity: 0.75;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-badge">
+      <div class="logo-dots">
+        <div class="logo-dot"></div>
+        <div class="logo-dot"></div>
+        <div class="logo-dot dim"></div>
+        <div class="logo-dot"></div>
+        <div class="logo-dot dim"></div>
+        <div class="logo-dot"></div>
+        <div class="logo-dot dim"></div>
+        <div class="logo-dot"></div>
+        <div class="logo-dot"></div>
+      </div>
+    </div>
+    <div>
+      <h1>Tailscale Plugin</h1>
+      <div class="subtitle">Secure mesh network monitor for Pebble</div>
+    </div>
+  </div>
+
+  <div id="blocked-banner" class="alert warning hidden"></div>
+  <div id="error-banner" class="alert error hidden"></div>
+
+  <!-- Connected State Card -->
+  <div id="card-connected" class="card hidden">
+    <div class="status-badge connected">
+      <span class="dot"></span> Connected to Tailscale
+    </div>
+    <h2 id="connected-tailnet">Tailnet: -</h2>
+
+    <div class="grid-stats">
+      <div class="stat-box">
+        <div id="stat-online" class="stat-num">0</div>
+        <div class="stat-label">Online Devices</div>
+      </div>
+      <div class="stat-box">
+        <div id="stat-total" class="stat-num">0</div>
+        <div class="stat-label">Total Devices</div>
+      </div>
+    </div>
+
+    <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-top: 14px;">
+      Device Summary
+    </div>
+    <ul id="device-preview" class="device-list"></ul>
+
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <button id="btn-refresh" type="button" class="btn outline" style="flex: 1;">Refresh Status</button>
+      <button id="btn-disconnect" type="button" class="btn danger" style="flex: 1;">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- Setup / Configuration Card -->
+  <div id="card-setup" class="card">
+    <h2>Connect to Tailscale API</h2>
+    <div class="instructions">
+      <ol>
+        <li>Open the <button id="btn-open-keys" type="button" class="link-btn">Tailscale Admin Console &gt; Settings &gt; Keys</button>.</li>
+        <li>Under <strong>API access tokens</strong>, click <strong>Generate API access token</strong>.</li>
+        <li>Copy the token (starts with <code>tskey-api-</code>) and paste it below.</li>
+      </ol>
+    </div>
+
+    <div class="field">
+      <label for="input-token">Bearer API Token</label>
+      <div class="input-wrapper">
+        <input id="input-token" type="password" placeholder="tskey-api-k123456CNTRL-..." autocomplete="off" spellcheck="false">
+        <button id="btn-toggle-pw" type="button" class="toggle-pw-btn">Show</button>
+      </div>
+      <div class="field-hint">
+        Your token is stored securely on your phone using hardware-backed secure storage.
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="input-tailnet">Tailnet Name (Optional)</label>
+      <input id="input-tailnet" type="text" placeholder="- (default tailnet)" autocomplete="off" spellcheck="false" value="-">
+      <div class="field-hint">
+        Leave on <code>-</code> to automatically use the default tailnet for this token, or specify your organization (e.g. <code>example.com</code>).
+      </div>
+    </div>
+
+    <button id="btn-save" type="button" class="btn">Connect &amp; Validate Token</button>
+  </div>
+
+  <div id="status-bar">Initializing plugin…</div>
+
+  <script>
+    var $ = function (id) {
+      return document.getElementById(id);
+    };
+
+    function say(text) {
+      $('status-bar').textContent = text;
+    }
+
+    function showError(msg) {
+      var banner = $('error-banner');
+      if (msg) {
+        banner.textContent = msg;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function send(message) {
+      if (typeof Pebble !== 'undefined' && Pebble.sendMessage) {
+        return Pebble.sendMessage('plugin', message);
+      }
+      return Promise.reject(new Error('Pebble plugin bridge not available'));
+    }
+
+    function openExternal(url) {
+      if (typeof Pebble !== 'undefined' && Pebble.openUrl) {
+        Pebble.openUrl(url);
+      } else {
+        window.open(url, '_blank');
+      }
+    }
+
+    function renderDeviceList(devices) {
+      var listEl = $('device-preview');
+      listEl.innerHTML = '';
+      if (!devices || devices.length === 0) {
+        listEl.innerHTML = '<li class="device-item" style="justify-content: center; opacity: 0.6;">No devices found</li>';
+        return;
+      }
+      devices.forEach(function (d) {
+        var li = document.createElement('li');
+        li.className = 'device-item';
+
+        var info = document.createElement('div');
+        info.className = 'dev-info';
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'dev-name';
+        nameSpan.textContent = d.name || d.hostname || 'Device';
+        var ipSpan = document.createElement('span');
+        ipSpan.className = 'dev-ip';
+        var ipv4 = (d.addresses || []).find(function (a) { return a.indexOf('.') !== -1; }) || '';
+        ipSpan.textContent = (ipv4 ? ipv4 + ' • ' : '') + (d.os || 'Unknown OS');
+        info.appendChild(nameSpan);
+        info.appendChild(ipSpan);
+
+        var statusSpan = document.createElement('div');
+        statusSpan.className = 'dev-status';
+        var dot = document.createElement('span');
+        dot.className = 'dev-dot ' + (d.connected ? 'online' : 'offline');
+        statusSpan.appendChild(dot);
+        var label = document.createElement('span');
+        label.textContent = d.connected ? 'Online' : 'Offline';
+        label.style.opacity = d.connected ? '1' : '0.6';
+        statusSpan.appendChild(label);
+
+        li.appendChild(info);
+        li.appendChild(statusSpan);
+        listEl.appendChild(li);
+      });
+    }
+
+    function updateState(data) {
+      console.log('[TailscaleConfig] updateState:', data);
+      showError(null);
+
+      if (data && data.configured) {
+        $('card-connected').classList.remove('hidden');
+        $('card-setup').classList.add('hidden');
+        $('connected-tailnet').textContent = 'Tailnet: ' + (data.tailnet || 'Default');
+        $('stat-online').textContent = String(data.onlineCount || 0);
+        $('stat-total').textContent = String(data.devicesCount || 0);
+        renderDeviceList(data.devices || []);
+        say('Connected to Tailscale. Sources active.');
+      } else {
+        $('card-connected').classList.add('hidden');
+        $('card-setup').classList.remove('hidden');
+        if (data && data.tailnet && data.tailnet !== '-') {
+          $('input-tailnet').value = data.tailnet;
+        }
+        if (data && data.error) {
+          showError(data.error);
+          say(data.expired ? 'Token expired. Please enter a new token.' : 'Authentication error.');
+        } else {
+          say('Please enter your Tailscale API Bearer token.');
+        }
+      }
+    }
+
+    // Toggle password visibility
+    $('btn-toggle-pw').onclick = function () {
+      var pwInput = $('input-token');
+      if (pwInput.type === 'password') {
+        pwInput.type = 'text';
+        $('btn-toggle-pw').textContent = 'Hide';
+      } else {
+        pwInput.type = 'password';
+        $('btn-toggle-pw').textContent = 'Show';
+      }
+    };
+
+    $('btn-open-keys').onclick = function () {
+      openExternal('https://login.tailscale.com/admin/settings/keys');
+    };
+
+    // Save & Connect
+    $('btn-save').onclick = async function () {
+      var token = ($('input-token').value || '').trim();
+      var tailnet = ($('input-tailnet').value || '').trim() || '-';
+
+      if (!token) {
+        showError('Please enter a valid Tailscale Bearer API token.');
+        return;
+      }
+
+      showError(null);
+      $('btn-save').disabled = true;
+      say('Validating token with Tailscale API…');
+
+      try {
+        var reply = await send({ type: 'save', token: token, tailnet: tailnet });
+        $('btn-save').disabled = false;
+        if (reply && reply.error) {
+          showError(reply.error);
+          say('Connection failed.');
+        } else {
+          $('input-token').value = '';
+          updateState(reply);
+        }
+      } catch (err) {
+        $('btn-save').disabled = false;
+        showError('Request failed: ' + (err.message || String(err)));
+        say('Error communicating with plugin.');
+      }
+    };
+
+    // Refresh
+    $('btn-refresh').onclick = async function () {
+      say('Refreshing Tailscale status…');
+      try {
+        var reply = await send({ type: 'status' });
+        updateState(reply);
+      } catch (err) {
+        showError('Refresh failed: ' + (err.message || String(err)));
+      }
+    };
+
+    // Disconnect
+    $('btn-disconnect').onclick = async function () {
+      if (!confirm('Are you sure you want to disconnect Tailscale from Pebble?')) {
+        return;
+      }
+      say('Disconnecting…');
+      try {
+        var reply = await send({ type: 'unlink' });
+        updateState(reply);
+      } catch (err) {
+        showError('Disconnect failed: ' + (err.message || String(err)));
+      }
+    };
+
+    // Initialization
+    async function init() {
+      try {
+        var reach = await send({ type: 'reach' });
+        if (reach && reach.blocked) {
+          var b = $('blocked-banner');
+          b.innerHTML = '<strong>Permission required:</strong> Enable internet access for ' + reach.blocked.host + ' in the Pebble app settings.';
+          b.classList.remove('hidden');
+        }
+      } catch (e) {}
+
+      try {
+        var status = await send({ type: 'status' });
+        updateState(status);
+      } catch (e) {
+        say('Failed to load initial status.');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

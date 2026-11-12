@@ -1,0 +1,491 @@
+{
+  "name": "tailscale-pebble-plugin",
+  "author": "BenBJD",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-plugin"
+  ],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Tailscale",
+    "uuid": "3e0bb1b3-affc-4cb9-acee-c8ac4d1fdc37",
+    "sdkVersion": "3",
+    "projectType": "plugin",
+    "usesPermissions": [
+      {
+        "name": "Internet",
+        "parameters": {
+          "domains": [
+            "api.tailscale.com"
+          ]
+        },
+        "reason": "To connect to Tailscale API and retrieve tailnet and device status",
+        "required": true
+      }
+    ],
+    "configPage": "src/config.html",
+    "plugin": {
+      "description": "Tailscale VPN integration providing real-time device status, IP addresses, tailnet overview, DNS, subnet routes, and user information.",
+      "script": "src/plugin/index.js",
+      "sources": [
+        {
+          "category": "network",
+          "items": [
+            "device"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "hostname": [
+              "shortText"
+            ],
+            "ipv4": [
+              "shortText"
+            ],
+            "ipv6": [
+              "shortText"
+            ],
+            "status": [
+              "shortText",
+              "longText"
+            ],
+            "connected": [
+              "boolean",
+              "shortText"
+            ],
+            "os": [
+              "shortText"
+            ],
+            "last_seen": [
+              "shortText"
+            ],
+            "update_available": [
+              "boolean",
+              "shortText"
+            ],
+            "client_version": [
+              "shortText"
+            ],
+            "tags": [
+              "shortText",
+              "longText"
+            ],
+            "authorized": [
+              "boolean",
+              "shortText"
+            ],
+            "user": [
+              "shortText"
+            ],
+            "device_id": [
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 60
+        },
+        {
+          "category": "network",
+          "items": [
+            "tailnet"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "devices_count": [
+              "numericValue",
+              "shortText"
+            ],
+            "online_count": [
+              "numericValue",
+              "shortText",
+              "longText"
+            ],
+            "users_count": [
+              "numericValue",
+              "shortText"
+            ],
+            "magic_dns": [
+              "boolean",
+              "shortText"
+            ]
+          },
+          "supportsMultiple": false,
+          "suggestedRefreshIntervalSec": 60
+        },
+        {
+          "category": "network",
+          "items": [
+            "routes"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "device_id": [
+              "shortText"
+            ],
+            "advertised_routes": [
+              "shortText",
+              "longText"
+            ],
+            "enabled_routes": [
+              "shortText",
+              "longText"
+            ],
+            "is_exit_node": [
+              "boolean",
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 120
+        },
+        {
+          "category": "network",
+          "items": [
+            "dns"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "magic_dns": [
+              "boolean",
+              "shortText"
+            ],
+            "nameservers": [
+              "shortText",
+              "longText"
+            ],
+            "searchpaths": [
+              "shortText",
+              "longText"
+            ]
+          },
+          "supportsMultiple": false,
+          "suggestedRefreshIntervalSec": 300
+        },
+        {
+          "category": "network",
+          "items": [
+            "user"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "login_name": [
+              "shortText"
+            ],
+            "role": [
+              "shortText"
+            ],
+            "status": [
+              "shortText"
+            ],
+            "device_count": [
+              "numericValue",
+              "shortText"
+            ],
+            "user_id": [
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 300
+        },
+        {
+          "category": "network",
+          "items": [
+            "key"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "key_id": [
+              "shortText"
+            ],
+            "key_type": [
+              "shortText"
+            ],
+            "created": [
+              "shortText"
+            ],
+            "expires": [
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 300
+        },
+        {
+          "category": "network",
+          "items": [
+            "configured"
+          ],
+          "properties": {
+            "name": [
+              "shortText"
+            ],
+            "configured": [
+              "boolean",
+              "shortText"
+            ],
+            "tailnet": [
+              "shortText"
+            ],
+            "online_devices": [
+              "numericValue",
+              "shortText"
+            ],
+            "total_devices": [
+              "numericValue",
+              "shortText"
+            ]
+          },
+          "supportsMultiple": false,
+          "suggestedRefreshIntervalSec": 60
+        },
+        {
+          "category": "tailscale",
+          "items": [
+            "device"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "hostname": [
+              "shortText"
+            ],
+            "ipv4": [
+              "shortText"
+            ],
+            "ipv6": [
+              "shortText"
+            ],
+            "status": [
+              "shortText",
+              "longText"
+            ],
+            "connected": [
+              "boolean",
+              "shortText"
+            ],
+            "os": [
+              "shortText"
+            ],
+            "last_seen": [
+              "shortText"
+            ],
+            "update_available": [
+              "boolean",
+              "shortText"
+            ],
+            "client_version": [
+              "shortText"
+            ],
+            "tags": [
+              "shortText",
+              "longText"
+            ],
+            "authorized": [
+              "boolean",
+              "shortText"
+            ],
+            "user": [
+              "shortText"
+            ],
+            "device_id": [
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 60
+        },
+        {
+          "category": "tailscale",
+          "items": [
+            "tailnet"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "devices_count": [
+              "numericValue",
+              "shortText"
+            ],
+            "online_count": [
+              "numericValue",
+              "shortText",
+              "longText"
+            ],
+            "users_count": [
+              "numericValue",
+              "shortText"
+            ],
+            "magic_dns": [
+              "boolean",
+              "shortText"
+            ]
+          },
+          "supportsMultiple": false,
+          "suggestedRefreshIntervalSec": 60
+        },
+        {
+          "category": "tailscale",
+          "items": [
+            "routes"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "device_id": [
+              "shortText"
+            ],
+            "advertised_routes": [
+              "shortText",
+              "longText"
+            ],
+            "enabled_routes": [
+              "shortText",
+              "longText"
+            ],
+            "is_exit_node": [
+              "boolean",
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 120
+        },
+        {
+          "category": "tailscale",
+          "items": [
+            "dns"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "magic_dns": [
+              "boolean",
+              "shortText"
+            ],
+            "nameservers": [
+              "shortText",
+              "longText"
+            ],
+            "searchpaths": [
+              "shortText",
+              "longText"
+            ]
+          },
+          "supportsMultiple": false,
+          "suggestedRefreshIntervalSec": 300
+        },
+        {
+          "category": "tailscale",
+          "items": [
+            "user"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "login_name": [
+              "shortText"
+            ],
+            "role": [
+              "shortText"
+            ],
+            "status": [
+              "shortText"
+            ],
+            "device_count": [
+              "numericValue",
+              "shortText"
+            ],
+            "user_id": [
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 300
+        },
+        {
+          "category": "tailscale",
+          "items": [
+            "key"
+          ],
+          "properties": {
+            "name": [
+              "shortText",
+              "longText"
+            ],
+            "key_id": [
+              "shortText"
+            ],
+            "key_type": [
+              "shortText"
+            ],
+            "created": [
+              "shortText"
+            ],
+            "expires": [
+              "shortText"
+            ]
+          },
+          "supportsMultiple": true,
+          "suggestedRefreshIntervalSec": 300
+        },
+        {
+          "category": "tailscale",
+          "items": [
+            "configured"
+          ],
+          "properties": {
+            "name": [
+              "shortText"
+            ],
+            "configured": [
+              "boolean",
+              "shortText"
+            ],
+            "tailnet": [
+              "shortText"
+            ],
+            "online_devices": [
+              "numericValue",
+              "shortText"
+            ],
+            "total_devices": [
+              "numericValue",
+              "shortText"
+            ]
+          },
+          "supportsMultiple": false,
+          "suggestedRefreshIntervalSec": 60
+        }
+      ]
+    }
+  }
+}
