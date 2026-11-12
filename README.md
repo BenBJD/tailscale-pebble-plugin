@@ -134,8 +134,8 @@ Install the bundle into an emulator:
 pebble install --emulator basalt --vnc
 ```
 
-List installed plugins in the emulator:
-
+Or to your watch:
 ```bash
-pebble plugins list --emulator basalt --vnc
+pebble install --cloudpebble (or --phone <IP>)
+
 ```
