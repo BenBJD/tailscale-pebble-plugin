@@ -384,18 +384,17 @@
       </div>
     </div>
     <div>
-      <h1>Tailscale Plugin</h1>
-      <div class="subtitle">Secure mesh network monitor for Pebble</div>
+      <h1>Tailscale</h1>
+      <div class="subtitle">Mesh network monitor</div>
     </div>
   </div>
 
   <div id="blocked-banner" class="alert warning hidden"></div>
   <div id="error-banner" class="alert error hidden"></div>
 
-  <!-- Connected State Card -->
   <div id="card-connected" class="card hidden">
     <div class="status-badge connected">
-      <span class="dot"></span> Connected to Tailscale
+      <span class="dot"></span> Connected
     </div>
     <h2 id="connected-tailnet">Tailnet: -</h2>
 
@@ -411,50 +410,49 @@
     </div>
 
     <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-top: 14px;">
-      Device Summary
+      Devices
     </div>
     <ul id="device-preview" class="device-list"></ul>
 
     <div style="display: flex; gap: 10px; margin-top: 16px;">
-      <button id="btn-refresh" type="button" class="btn outline" style="flex: 1;">Refresh Status</button>
+      <button id="btn-refresh" type="button" class="btn outline" style="flex: 1;">Refresh</button>
       <button id="btn-disconnect" type="button" class="btn danger" style="flex: 1;">Disconnect</button>
     </div>
   </div>
 
-  <!-- Setup / Configuration Card -->
   <div id="card-setup" class="card">
-    <h2>Connect to Tailscale API</h2>
+    <h2>Connect to Tailscale</h2>
     <div class="instructions">
       <ol>
-        <li>Open the <button id="btn-open-keys" type="button" class="link-btn">Tailscale Admin Console &gt; Settings &gt; Keys</button>.</li>
-        <li>Under <strong>API access tokens</strong>, click <strong>Generate API access token</strong>.</li>
-        <li>Copy the token (starts with <code>tskey-api-</code>) and paste it below.</li>
+        <li>Open <button id="btn-open-keys" type="button" class="link-btn">Tailscale Admin Console &gt; Settings &gt; Keys</button>.</li>
+        <li>Generate an API access token.</li>
+        <li>Paste the token into the field below.</li>
       </ol>
     </div>
 
     <div class="field">
-      <label for="input-token">Bearer API Token</label>
+      <label for="input-token">API Token</label>
       <div class="input-wrapper">
         <input id="input-token" type="password" placeholder="tskey-api-k123456CNTRL-..." autocomplete="off" spellcheck="false">
         <button id="btn-toggle-pw" type="button" class="toggle-pw-btn">Show</button>
       </div>
       <div class="field-hint">
-        Your token is stored securely on your phone using hardware-backed secure storage.
+        The token is stored in secure storage on your phone.
       </div>
     </div>
 
     <div class="field">
-      <label for="input-tailnet">Tailnet Name (Optional)</label>
+      <label for="input-tailnet">Tailnet (Optional)</label>
       <input id="input-tailnet" type="text" placeholder="- (default tailnet)" autocomplete="off" spellcheck="false" value="-">
       <div class="field-hint">
-        Leave on <code>-</code> to automatically use the default tailnet for this token, or specify your organization (e.g. <code>example.com</code>).
+        Leave as <code>-</code> to use the token's default tailnet, or enter your domain.
       </div>
     </div>
 
-    <button id="btn-save" type="button" class="btn">Connect &amp; Validate Token</button>
+    <button id="btn-save" type="button" class="btn">Connect</button>
   </div>
 
-  <div id="status-bar">Initializing plugin…</div>
+  <div id="status-bar">Initializing…</div>
 
   <script>
     var $ = function (id) {
@@ -540,7 +538,7 @@
         $('stat-online').textContent = String(data.onlineCount || 0);
         $('stat-total').textContent = String(data.devicesCount || 0);
         renderDeviceList(data.devices || []);
-        say('Connected to Tailscale. Sources active.');
+        say('Connected.');
       } else {
         $('card-connected').classList.add('hidden');
         $('card-setup').classList.remove('hidden');
@@ -549,14 +547,13 @@
         }
         if (data && data.error) {
           showError(data.error);
-          say(data.expired ? 'Token expired. Please enter a new token.' : 'Authentication error.');
+          say(data.expired ? 'Token expired.' : 'Authentication error.');
         } else {
-          say('Please enter your Tailscale API Bearer token.');
+          say('Ready.');
         }
       }
     }
 
-    // Toggle password visibility
     $('btn-toggle-pw').onclick = function () {
       var pwInput = $('input-token');
       if (pwInput.type === 'password') {
@@ -572,19 +569,18 @@
       openExternal('https://login.tailscale.com/admin/settings/keys');
     };
 
-    // Save & Connect
     $('btn-save').onclick = async function () {
       var token = ($('input-token').value || '').trim();
       var tailnet = ($('input-tailnet').value || '').trim() || '-';
 
       if (!token) {
-        showError('Please enter a valid Tailscale Bearer API token.');
+        showError('Please enter a valid Tailscale API token.');
         return;
       }
 
       showError(null);
       $('btn-save').disabled = true;
-      say('Validating token with Tailscale API…');
+      say('Checking token...');
 
       try {
         var reply = await send({ type: 'save', token: token, tailnet: tailnet });
@@ -603,9 +599,8 @@
       }
     };
 
-    // Refresh
     $('btn-refresh').onclick = async function () {
-      say('Refreshing Tailscale status…');
+      say('Refreshing...');
       try {
         var reply = await send({ type: 'status' });
         updateState(reply);
@@ -614,12 +609,11 @@
       }
     };
 
-    // Disconnect
     $('btn-disconnect').onclick = async function () {
-      if (!confirm('Are you sure you want to disconnect Tailscale from Pebble?')) {
+      if (!confirm('Disconnect Tailscale from Pebble?')) {
         return;
       }
-      say('Disconnecting…');
+      say('Disconnecting...');
       try {
         var reply = await send({ type: 'unlink' });
         updateState(reply);
@@ -628,13 +622,12 @@
       }
     };
 
-    // Initialization
     async function init() {
       try {
         var reach = await send({ type: 'reach' });
         if (reach && reach.blocked) {
           var b = $('blocked-banner');
-          b.innerHTML = '<strong>Permission required:</strong> Enable internet access for ' + reach.blocked.host + ' in the Pebble app settings.';
+          b.innerHTML = 'Enable internet access for ' + reach.blocked.host + ' in the Pebble app settings.';
           b.classList.remove('hidden');
         }
       } catch (e) {}
@@ -643,7 +636,7 @@
         var status = await send({ type: 'status' });
         updateState(status);
       } catch (e) {
-        say('Failed to load initial status.');
+        say('Failed to load status.');
       }
     }
 

@@ -26,7 +26,7 @@
     ],
     "configPage": "src/config.html",
     "plugin": {
-      "description": "Tailscale VPN integration providing real-time device status, IP addresses, tailnet overview, DNS, subnet routes, and user information.",
+      "description": "Tailscale integration that reports device status, IP addresses, DNS settings, subnet routes, and users.",
       "script": "src/plugin/index.js",
       "sources": [
         {

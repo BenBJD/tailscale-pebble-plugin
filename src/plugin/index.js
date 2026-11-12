@@ -1,10 +1,5 @@
-/**
- * Tailscale Pebble Plugin
- *
- * Runs inside the Pebble mobile companion app. Interfaces directly with Tailscale's REST API v2
- * (api.tailscale.com) and exposes standard `network/*` and `tailscale/*` sources to Pebble
- * watchfaces, watchapps, and the Index assistant using the Pebble Plugins API.
- */
+// Tailscale plugin for the Pebble mobile companion app.
+// Connects to https://api.tailscale.com/api/v2 and serves network/* and tailscale/* sources.
 
 var API_ROOT = 'https://api.tailscale.com/api/v2';
 var TOKEN_KEY = 'tailscale_api_token';
@@ -32,8 +27,6 @@ var ALL_SOURCES = [
   'tailscale/configured'
 ];
 
-// ---------------------------------------------------------------- Network / Permissions
-
 async function blockedHost() {
   var permissions = typeof Pebble !== 'undefined' && Pebble.permissions;
   if (permissions && typeof permissions.query === 'function') {
@@ -55,8 +48,6 @@ async function checkReach() {
   } catch (e) {}
   return blocked;
 }
-
-// ---------------------------------------------------------------- Storage Helpers
 
 async function getStorageItem(key) {
   try {
@@ -116,8 +107,6 @@ async function clearCredentials() {
   } catch (e) {}
 }
 
-// ---------------------------------------------------------------- Formatting Helpers
-
 function formatRelativeTime(isoString) {
   if (!isoString) return 'Unknown';
   try {
@@ -164,8 +153,6 @@ function extractIps(addresses) {
   }
   return { ipv4: ipv4, ipv6: ipv6 };
 }
-
-// ---------------------------------------------------------------- Tailscale API Client
 
 async function tailscaleFetch(endpoint, method, body, tokenOverride) {
   var token = tokenOverride || await getApiToken();
@@ -221,7 +208,6 @@ async function tailscaleFetch(endpoint, method, body, tokenOverride) {
   }
 }
 
-// 1. Devices: List tailnet devices
 async function apiGetDevices(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   var res = await tailscaleFetch('/tailnet/' + tn + '/devices', 'GET', null, token);
@@ -229,49 +215,41 @@ async function apiGetDevices(tailnet, token) {
   return { ok: true, devices: (res.json && res.json.devices) || [] };
 }
 
-// 2. Device details
 async function apiGetDevice(deviceId, token) {
   var id = encodeURIComponent(deviceId);
   return await tailscaleFetch('/device/' + id, 'GET', null, token);
 }
 
-// 3. Device routes
 async function apiGetDeviceRoutes(deviceId, token) {
   var id = encodeURIComponent(deviceId);
   return await tailscaleFetch('/device/' + id + '/routes', 'GET', null, token);
 }
 
-// 4. DNS Preferences
 async function apiGetDnsPreferences(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/dns/preferences', 'GET', null, token);
 }
 
-// 5. DNS Nameservers
 async function apiGetDnsNameservers(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/dns/nameservers', 'GET', null, token);
 }
 
-// 6. DNS Search Paths
 async function apiGetDnsSearchPaths(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/dns/searchpaths', 'GET', null, token);
 }
 
-// 7. DNS Split
 async function apiGetDnsSplit(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/dns/split-dns', 'GET', null, token);
 }
 
-// 8. DNS Configuration
 async function apiGetDnsConfiguration(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/dns/configuration', 'GET', null, token);
 }
 
-// 9. Users
 async function apiGetUsers(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   var res = await tailscaleFetch('/tailnet/' + tn + '/users', 'GET', null, token);
@@ -279,13 +257,11 @@ async function apiGetUsers(tailnet, token) {
   return { ok: true, users: (res.json && res.json.users) || [] };
 }
 
-// 10. User by ID
 async function apiGetUser(userId, token) {
   var id = encodeURIComponent(userId);
   return await tailscaleFetch('/users/' + id, 'GET', null, token);
 }
 
-// 11. Keys
 async function apiGetKeys(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   var res = await tailscaleFetch('/tailnet/' + tn + '/keys', 'GET', null, token);
@@ -293,26 +269,22 @@ async function apiGetKeys(tailnet, token) {
   return { ok: true, keys: (res.json && res.json.keys) || [] };
 }
 
-// 12. Key by ID
 async function apiGetKey(tailnet, keyId, token) {
   var tn = encodeURIComponent(tailnet || '-');
   var kid = encodeURIComponent(keyId);
   return await tailscaleFetch('/tailnet/' + tn + '/keys/' + kid, 'GET', null, token);
 }
 
-// 13. Settings
 async function apiGetSettings(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/settings', 'GET', null, token);
 }
 
-// 14. Contacts
 async function apiGetContacts(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/contacts', 'GET', null, token);
 }
 
-// 15. Webhooks
 async function apiGetWebhooks(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   var res = await tailscaleFetch('/tailnet/' + tn + '/webhooks', 'GET', null, token);
@@ -320,13 +292,10 @@ async function apiGetWebhooks(tailnet, token) {
   return { ok: true, webhooks: (res.json && res.json.webhooks) || [] };
 }
 
-// 16. ACL Policy File
 async function apiGetAcl(tailnet, token) {
   var tn = encodeURIComponent(tailnet || '-');
   return await tailscaleFetch('/tailnet/' + tn + '/acl', 'GET', null, token);
 }
-
-// ---------------------------------------------------------------- Source Handler
 
 Pebble.registerSourceHandler(async function (request, respond) {
   console.log('[TailscalePlugin] Source request:', request.category, request.item);
@@ -342,7 +311,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
   var token = await getApiToken();
   var tailnet = await getTailnetName();
 
-  // 1. configured check
   if (request.item === 'configured') {
     var hasToken = (token && token.length > 0);
     var cachedSummary = null;
@@ -379,13 +347,11 @@ Pebble.registerSourceHandler(async function (request, respond) {
     return;
   }
 
-  // All other sources require authentication
   if (!token) {
     respond.error('AUTH_REQUIRED', 'Please set your Tailscale Bearer token in the plugin settings page.');
     return;
   }
 
-  // 2. device source -> list all devices
   if (request.item === 'device') {
     var devRes = await apiGetDevices(tailnet, token);
     if (!devRes.ok) {
@@ -398,7 +364,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
       localStorage.setItem(DEVICES_CACHE_KEY, JSON.stringify(devices));
     } catch (e) {}
 
-    // Sort: online devices first, then alphabetically by name
     var sortedDevices = devices.slice().sort(function (a, b) {
       if (a.connectedToControl && !b.connectedToControl) return -1;
       if (!a.connectedToControl && b.connectedToControl) return 1;
@@ -474,7 +439,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
       };
     });
 
-    // Update summary cache
     var onlineDevicesCount = devices.filter(function (d) { return d.connectedToControl; }).length;
     try {
       localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify({
@@ -492,7 +456,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
     return;
   }
 
-  // 3. tailnet source -> overview summary
   if (request.item === 'tailnet') {
     var devRes2 = await apiGetDevices(tailnet, token);
     var devList = (devRes2.ok && devRes2.devices) || [];
@@ -554,7 +517,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
     return;
   }
 
-  // 4. routes source -> subnet routes & exit nodes across devices
   if (request.item === 'routes') {
     var devResR = await apiGetDevices(tailnet, token);
     if (!devResR.ok) {
@@ -570,7 +532,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
       var adv = devObj.advertisedRoutes || [];
       var ena = devObj.enabledRoutes || [];
 
-      // Check if advertised or enabled routes exist
       if (adv.length > 0 || ena.length > 0) {
         var isExitNode = ena.indexOf('0.0.0.0/0') !== -1 || ena.indexOf('::/0') !== -1 ||
                          adv.indexOf('0.0.0.0/0') !== -1 || adv.indexOf('::/0') !== -1;
@@ -610,7 +571,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
     return;
   }
 
-  // 5. dns source
   if (request.item === 'dns') {
     var dnsPref = await apiGetDnsPreferences(tailnet, token);
     var dnsNameservers = await apiGetDnsNameservers(tailnet, token);
@@ -647,7 +607,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
     return;
   }
 
-  // 6. user source
   if (request.item === 'user') {
     var usersRes = await apiGetUsers(tailnet, token);
     if (!usersRes.ok) {
@@ -692,7 +651,6 @@ Pebble.registerSourceHandler(async function (request, respond) {
     return;
   }
 
-  // 7. key source
   if (request.item === 'key') {
     var keysRes = await apiGetKeys(tailnet, token);
     if (!keysRes.ok) {
@@ -736,13 +694,9 @@ Pebble.registerSourceHandler(async function (request, respond) {
   respond.error('INVALID_REQUEST', 'Unknown source item: ' + request.item);
 });
 
-// ---------------------------------------------------------------- Action Handler (Read-Only)
-
 Pebble.registerActionHandler(function (request, respond) {
   respond.error('INVALID_REQUEST', 'Tailscale plugin is read-only. Unknown action: ' + request.action);
 });
-
-// ---------------------------------------------------------------- Config Page Handler
 
 Pebble.registerConfigHandler(async function (message, respond) {
   var type = message && message.type;
@@ -767,7 +721,6 @@ Pebble.registerConfigHandler(async function (message, respond) {
       return;
     }
 
-    // Verify token with API
     var testRes = await apiGetDevices(tailnet, token);
     if (!testRes.ok) {
       respond({
@@ -817,7 +770,6 @@ Pebble.registerConfigHandler(async function (message, respond) {
       return;
     }
 
-    // Validate token against Tailscale API
     var verifyRes = await apiGetDevices(inputTailnet, inputToken);
     if (!verifyRes.ok) {
       respond({
